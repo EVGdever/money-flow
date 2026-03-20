@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Бабулесы</title>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <style>
+      :root {
+        --bg-1: #060816;
+        --bg-2: #0d1328;
+        --card: rgba(14, 20, 40, 0.88);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --text: #f4f7ff;
+        --muted: #8f9ab8;
+        --accent: #7dff74;
+        --accent-2: #39d353;
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top, rgba(84, 116, 255, 0.2), transparent 35%),
+          radial-gradient(circle at bottom left, rgba(32, 201, 151, 0.12), transparent 30%),
+          linear-gradient(160deg, var(--bg-1), var(--bg-2));
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .widget {
+        width: min(100%, 760px);
+        border-radius: 32px;
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(20px);
+        overflow: hidden;
+      }
+
+      .widget__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 28px 28px 18px;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        font-size: 12px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .title {
+        margin: 0;
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.05;
+      }
+
+      .subtitle {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .settings-btn {
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(0, 0, 0, 0.16);
+        color: var(--text);
+        cursor: pointer;
+        border-radius: 18px;
+        padding: 10px 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+      }
+
+      .settings-btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(125, 255, 116, 0.25);
+        box-shadow: 0 14px 38px rgba(0, 0, 0, 0.32);
+      }
+
+      .settings-btn svg {
+        width: 22px;
+        height: 22px;
+        display: block;
+        color: var(--accent);
+        filter: drop-shadow(0 0 14px rgba(125, 255, 116, 0.12));
+      }
+
+      .widget__body {
+        padding: 0 28px 28px;
+      }
+
+      .hero {
+        border-radius: 28px;
+        padding: 28px;
+        position: relative;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .float-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+
+      .float-tick {
+        position: absolute;
+        right: -335px;
+        font-weight: 800;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        font-size: 1em; /* подхватываем размер из JS (равный шрифту капитала) */
+        line-height: 1;
+        text-shadow: 0 10px 26px rgba(125, 255, 116, 0.22);
+        opacity: 1;
+        animation: floatTick 900ms ease-out forwards;
+        white-space: nowrap;
+      }
+
+      @keyframes floatTick {
+        0% {
+          transform: translate(-100%, 0) scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(-100%, -26px) scale(1.03);
+          opacity: 0;
+        }
+      }
+
+      .hero__label {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .hero__amount {
+        margin: 0;
+        font-size: clamp(44px, 7vw, 82px);
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.04em;
+        color: var(--accent);
+        text-shadow: 0 0 22px rgba(125, 255, 116, 0.14);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .hero__meta {
+        margin-top: 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .mini-counters {
+        margin-top: 18px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .mini-counter {
+        display: grid;
+        gap: 6px;
+      }
+
+      .mini-counter__label {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .mini-counter__value {
+        font-variant-numeric: tabular-nums;
+        font-weight: 800;
+        color: var(--accent);
+        text-shadow: 0 0 18px rgba(125, 255, 116, 0.12);
+        font-size: clamp(22px, 3.5vw, 42px);
+        line-height: 1;
+      }
+
+      .field__hint {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .goals {
+        margin-top: 18px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .goal {
+        border-radius: 22px;
+        padding: 16px 18px;
+        background: rgba(0, 0, 0, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .goal__top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 14px;
+        margin-bottom: 10px;
+      }
+
+      .goal__label {
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.01em;
+      }
+
+      .goal__percent {
+        font-variant-numeric: tabular-nums;
+        font-weight: 800;
+        color: var(--accent);
+        font-size: 16px;
+      }
+
+      .goal__eta {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.2;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        white-space: nowrap;
+      }
+
+      .goal__etaLeft {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .goal__etaRight {
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+
+      .segmented-bar {
+        height: 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(125, 255, 116, 0.10);
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: repeat(var(--segments), 1fr);
+        gap: 0;
+      }
+
+      .segment {
+        background: rgba(125, 255, 116, 0.12);
+        box-shadow: inset 0 0 0 1px rgba(125, 255, 116, 0.08);
+        border-radius: 0;
+      }
+
+      .segment--filled {
+        background: linear-gradient(180deg, rgba(125, 255, 116, 0.95), rgba(57, 211, 83, 0.85));
+        box-shadow: inset 0 0 0 1px rgba(125, 255, 116, 0.30), 0 0 16px rgba(125, 255, 116, 0.14);
+      }
+
+      .button {
+        appearance: none;
+        border: 0;
+        cursor: pointer;
+        border-radius: 14px;
+        padding: 12px 16px;
+        font: inherit;
+        font-weight: 600;
+        color: #08110a;
+        background: var(--accent);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: 0 10px 24px rgba(125, 255, 116, 0.22);
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+      }
+
+      .button:active {
+        transform: translateY(0);
+      }
+
+      .button--ghost {
+        background: rgba(0, 0, 0, 0.18);
+        color: var(--text);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        box-shadow: none;
+      }
+
+      .button--ghost:hover {
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+      }
+
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        z-index: 50;
+      }
+
+      .modal-overlay--open {
+        display: flex;
+      }
+
+      .modal {
+        width: min(520px, 100%);
+        border-radius: 26px;
+        background: rgba(12, 18, 40, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        box-shadow: 0 40px 140px rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(20px);
+        overflow: hidden;
+      }
+
+      .modal__header {
+        padding: 18px 18px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .modal__title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .icon-close {
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(0, 0, 0, 0.18);
+        color: var(--text);
+        cursor: pointer;
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        font-size: 22px;
+        line-height: 1;
+        display: grid;
+        place-items: center;
+        transition: transform 0.15s ease, border-color 0.15s ease;
+      }
+
+      .icon-close:hover {
+        transform: translateY(-1px);
+        border-color: rgba(125, 255, 116, 0.25);
+      }
+
+      .modal__body {
+        padding: 0 18px 18px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .field__label {
+        color: var(--muted);
+        font-weight: 800;
+        font-size: 13px;
+      }
+
+      .input {
+        width: 100%;
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(0, 0, 0, 0.20);
+        border-radius: 18px;
+        padding: 14px 14px;
+        color: var(--text);
+        font-weight: 800;
+        outline: none;
+      }
+
+      .input:focus {
+        border-color: rgba(125, 255, 116, 0.35);
+        box-shadow: 0 0 0 4px rgba(125, 255, 116, 0.12);
+      }
+
+      .modal__actions {
+        margin-top: 18px;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+
+      @media (max-width: 700px) {
+        .widget__header,
+        .widget__body {
+          padding-left: 18px;
+          padding-right: 18px;
+        }
+
+        .widget__header {
+          align-items: flex-start;
+        }
+
+        .hero {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="widget">
+      <div class="widget__header">
+        <div>
+          <p class="eyebrow">Денежный поток</p>
+          <h1 class="title">Капитал в движении</h1>
+          <p class="subtitle">Настройте скорость заработка и текущий капитал</p>
+        </div>
+        <button class="settings-btn" id="openSettings" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.65l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.06 7.06 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.58.22-1.12.53-1.63.94l-2.39-.96a.5.5 0 0 0-.61.22L2.7 7.48a.5.5 0 0 0 .12.65l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.82 14.52a.5.5 0 0 0-.12.65l1.92 3.32c.13.22.39.31.61.22l2.39-.96c.51.41 1.05.72 1.63.94l.36 2.54c.05.24.25.42.49.42h3.8c.24 0 .44-.18.49-.42l.36-2.54c.58-.22 1.12-.53 1.63-.94l2.39.96c.22.09.48 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.65l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"
+            />
+          </svg>
+          Настройки
+        </button>
+      </div>
+
+      <div class="widget__body">
+        <div class="hero">
+          <p class="hero__label">Текущий капитал</p>
+          <h2 class="hero__amount" id="currentCapital">0 ₽</h2>
+          <div class="float-layer" id="floatLayer" aria-hidden="true"></div>
+
+          <div class="mini-counters" aria-label="Заработок за день и месяц">
+            <div class="mini-counter">
+              <div class="mini-counter__label">Сегодня заработано</div>
+              <div class="mini-counter__value" id="todayEarned">0 ₽</div>
+            </div>
+            <div class="mini-counter">
+              <div class="mini-counter__label">В этом месяце заработано</div>
+              <div class="mini-counter__value" id="monthEarned">0 ₽</div>
+            </div>
+          </div>
+
+          <!-- <div class="hero__meta"> -->
+            <!-- startDate moved to settings -->
+          <!-- </div> -->
+        </div>
+
+        <div class="goals" id="goals"></div>
+      </div>
+    </section>
+
+    <div class="modal-overlay" id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="modal">
+        <div class="modal__header">
+          <h3 class="modal__title" id="settingsTitle">Настройки</h3>
+          <button class="icon-close" id="closeSettings" type="button" aria-label="Закрыть">×</button>
+        </div>
+        <div class="modal__body">
+          <form id="settingsForm">
+            <div class="field">
+              <label class="field__label" for="monthlyIncomeInput">Сколько заработаешь в этом месяце (₽)</label>
+              <input
+                class="input"
+                id="monthlyIncomeInput"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="1"
+                required
+              />
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="capitalInput">Текущий капитал (₽)</label>
+              <input class="input" id="capitalInput" type="number" inputmode="decimal" min="0" step="1" required />
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="startAtInput">Дата и время начала</label>
+              <input class="input" id="startAtInput" type="datetime-local" required />
+              <div class="field__hint" id="startDateInSettings">Старт: —</div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="annualRateInput">Ставка в % годовых</label>
+              <input
+                class="input"
+                id="annualRateInput"
+                type="number"
+                inputmode="decimal"
+                step="0.01"
+                min="0"
+                required
+              />
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="capitalDeltaInput">Изменить капитал (± ₽)</label>
+              <input class="input" id="capitalDeltaInput" type="number" inputmode="decimal" step="1000" placeholder="например 100000 или -100000" />
+            </div>
+
+            <div class="modal__actions">
+              <button class="button button--ghost" id="applyCapitalDelta" type="button">Применить</button>
+              <button class="button button--ghost" id="cancelSettings" type="button">Отменить</button>
+              <button class="button" type="submit">Сохранить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const DEFAULT_MONTHLY_INCOME = 800000;
+      const DEFAULT_CURRENT_CAPITAL = 36000000;
+      const DEFAULT_ANNUAL_RATE_PCT = 0;
+
+      const TICK_MS = 1000; // каждую секунду
+      const SECONDS_IN_30_DAY_MONTH = 30 * 24 * 60 * 60;
+      const MONTH_MS = SECONDS_IN_30_DAY_MONTH * 1000;
+      const STORAGE_KEY = "money-flow-widget-state-v2";
+      const LEGACY_STORAGE_KEY = "money-flow-widget-state-v1";
+      const SAVE_STATE_EVERY_MS = 10000; // чтобы не дергать localStorage каждую секунду
+
+      const GOAL_SEGMENTS = 20; // по 5% (100% / 20 = 5%)
+      const GOALS = [
+        { label: "Базовые расходы (~208k/мес)", target: 12500000 },
+        { label: "Абсолютно все расходы (~400k/мес)", target: 24000000 },
+        { label: "Путешествие раз в 3 месяца (~450k/мес)", target: 27000000 },
+        { label: "Путешествие каждый месяц (~666k/мес)", target: 40000000 },
+      ];
+
+      const currentCapitalEl = document.getElementById("currentCapital");
+      const floatLayerEl = document.getElementById("floatLayer");
+      const heroEl = currentCapitalEl.closest(".hero");
+      const startDateInSettingsEl = document.getElementById("startDateInSettings");
+      const todayEarnedEl = document.getElementById("todayEarned");
+      const monthEarnedEl = document.getElementById("monthEarned");
+
+      const openSettingsBtn = document.getElementById("openSettings");
+      const settingsOverlayEl = document.getElementById("settingsOverlay");
+      const closeSettingsBtn = document.getElementById("closeSettings");
+      const cancelSettingsBtn = document.getElementById("cancelSettings");
+      const settingsFormEl = document.getElementById("settingsForm");
+
+      const monthlyIncomeInput = document.getElementById("monthlyIncomeInput");
+      const capitalInput = document.getElementById("capitalInput");
+      const startAtInput = document.getElementById("startAtInput");
+      const annualRateInput = document.getElementById("annualRateInput");
+      const capitalDeltaInput = document.getElementById("capitalDeltaInput");
+      const applyCapitalDeltaBtn = document.getElementById("applyCapitalDelta");
+
+      const goalsEl = document.getElementById("goals");
+      const goalsState = [];
+
+      function formatRub(value) {
+        return new Intl.NumberFormat("ru-RU", {
+          style: "currency",
+          currency: "RUB",
+          maximumFractionDigits: 2,
+        }).format(value);
+      }
+
+      function formatDate(timestamp) {
+        return new Intl.DateTimeFormat("ru-RU", {
+          dateStyle: "medium",
+          timeStyle: "medium",
+        }).format(new Date(timestamp));
+      }
+
+      function formatDuration(ms) {
+        const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+        const seconds = String(totalSeconds % 60).padStart(2, "0");
+        return `${hours}:${minutes}:${seconds}`;
+      }
+
+      function formatCountdown(ms) {
+        const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+        const seconds = String(totalSeconds % 60).padStart(2, "0");
+        return `${minutes}:${seconds}`;
+      }
+
+      function incomePerSecond(monthlyIncome) {
+        return monthlyIncome / SECONDS_IN_30_DAY_MONTH;
+      }
+
+      function interestMonthlyMultiplier(annualRatePct) {
+        const monthlyRate = annualRatePct / 100 / 12; // % годовых -> доля за месяц
+        return 1 + monthlyRate;
+      }
+
+      function computeCapitalFromBase(now, capitalBaseOverride) {
+        const elapsedMs = now - state.startedAt;
+        if (elapsedMs <= 0) return capitalBaseOverride;
+
+        const fullMonths = Math.floor(elapsedMs / MONTH_MS);
+        const remainingMs = elapsedMs - fullMonths * MONTH_MS;
+
+        const M = interestMonthlyMultiplier(state.annualRatePct); // multiplier per month
+        const I = state.monthlyIncome; // income for 30 days (month)
+        const earnedPerSecond = incomePerSecond(I);
+
+        // Рекурсия: c_{k+1} = (c_k + I) * M = M*c_k + M*I
+        // => c_m = M^m * c0 + (M*I) * (M^m - 1) / (M - 1)
+        // Для M=1: c_m = c0 + m*I
+        let capitalAtMonthEnd;
+        if (Math.abs(M - 1) < 1e-12) {
+          capitalAtMonthEnd = capitalBaseOverride + fullMonths * I;
+        } else {
+          const Mp = Math.pow(M, fullMonths);
+          capitalAtMonthEnd = Mp * capitalBaseOverride + (M * I * (Mp - 1)) / (M - 1);
+        }
+
+        // Неполный месяц: только линейный доход по секундам (процент начисляем только в полные месяцы)
+        const partialIncome = earnedPerSecond * (remainingMs / 1000);
+        return capitalAtMonthEnd + partialIncome;
+      }
+
+      function formatDateOnly(timestamp) {
+        return new Intl.DateTimeFormat("ru-RU", {
+          dateStyle: "medium",
+        }).format(new Date(timestamp));
+      }
+
+      function ruPlural(n, one, few, many) {
+        const abs = Math.abs(n);
+        const mod10 = abs % 10;
+        const mod100 = abs % 100;
+        if (mod10 === 1 && mod100 !== 11) return one;
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+        return many;
+      }
+
+      function formatEtaLeft(diff) {
+        const parts = [];
+
+        if (diff.years !== 0) parts.push(`${diff.years} ${ruPlural(diff.years, "год", "года", "лет")}`);
+        if (diff.months !== 0) parts.push(`${diff.months} ${ruPlural(diff.months, "месяц", "месяца", "месяцев")}`);
+        if (diff.days !== 0) parts.push(`${diff.days} ${ruPlural(diff.days, "день", "дня", "дней")}`);
+        if (diff.hours !== 0) parts.push(`${diff.hours} ${ruPlural(diff.hours, "час", "часа", "часов")}`);
+        if (diff.minutes !== 0) parts.push(`${diff.minutes} ${ruPlural(diff.minutes, "минута", "минуты", "минут")}`);
+        if (diff.seconds !== 0) parts.push(`${diff.seconds} ${ruPlural(diff.seconds, "секунда", "секунды", "секунд")}`);
+
+        // Если всё равно 0, покажем хотя бы секунды, чтобы строка не исчезла полностью
+        if (parts.length === 0) return `0 ${ruPlural(0, "секунда", "секунды", "секунд")}`;
+
+        return parts.join(", ");
+      }
+
+      function formatPercent(value) {
+        if (!Number.isFinite(value)) return "0%";
+        const clamped = Math.max(0, Math.min(100, value));
+        const rounded = Math.round(clamped * 100000) / 100000; // 0.00001%
+        // 5 знаков после запятой, с запятой как десятичный разделитель
+        return `${rounded.toFixed(5).replace(".", ",")}%`;
+      }
+
+      function getCalendarDiff(fromMs, toMs) {
+        const from = new Date(fromMs);
+        const to = new Date(toMs);
+
+        if (to <= from) {
+          return { years: 0, months: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
+        }
+
+        // Считаем разницу строго "вперёд" по календарным полям (UTC),
+        // чтобы не получать -2 месяца и подобные эффекты.
+        let years = to.getUTCFullYear() - from.getUTCFullYear();
+        let cursor = new Date(fromMs);
+        cursor.setUTCFullYear(from.getUTCFullYear() + years);
+        if (cursor > to) {
+          years -= 1;
+          cursor = new Date(fromMs);
+          cursor.setUTCFullYear(from.getUTCFullYear() + years);
+        }
+
+        let months = to.getUTCMonth() - cursor.getUTCMonth();
+        months += (to.getUTCFullYear() - cursor.getUTCFullYear()) * 12;
+        const cursorMonthBase = new Date(cursor.getTime());
+        cursor.setUTCMonth(cursor.getUTCMonth() + months);
+        if (cursor > to) {
+          months -= 1;
+          cursor = cursorMonthBase;
+          cursor.setUTCMonth(cursor.getUTCMonth() + months);
+        }
+
+        const remainingMs = Math.max(0, to.getTime() - cursor.getTime());
+        const totalSeconds = Math.floor(remainingMs / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        return { years, months, days, hours, minutes, seconds };
+      }
+
+      function getCurrentCapital(now) {
+        return computeCapitalFromBase(now, state.capitalBase);
+      }
+
+      function getInitialState() {
+        const now = Date.now();
+        const fallback = {
+          startedAt: now,
+          lastTickAt: now,
+          lastSavedAt: now,
+          monthlyIncome: DEFAULT_MONTHLY_INCOME,
+          annualRatePct: DEFAULT_ANNUAL_RATE_PCT,
+          // capitalBase = капитал на момент startedAt
+          capitalBase: DEFAULT_CURRENT_CAPITAL,
+        };
+
+        try {
+          let raw = localStorage.getItem(STORAGE_KEY);
+
+          // Миграция со старого формата: там были только startedAt/lastTickAt и считался фиксированный доход 800k/мес.
+          if (!raw) {
+            raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+            if (!raw) return fallback;
+          }
+
+          const parsed = JSON.parse(raw);
+          if (!parsed.startedAt || !parsed.lastTickAt) return fallback;
+
+          const monthlyIncome = typeof parsed.monthlyIncome === "number" ? parsed.monthlyIncome : DEFAULT_MONTHLY_INCOME;
+          const lastSavedAt = typeof parsed.lastSavedAt === "number" ? parsed.lastSavedAt : now;
+          const annualRatePct = typeof parsed.annualRatePct === "number" ? parsed.annualRatePct : DEFAULT_ANNUAL_RATE_PCT;
+
+          // v1 не содержал capitalBase — маппим на "сейчас капитал = DEFAULT_CURRENT_CAPITAL"
+          if (typeof parsed.capitalBase !== "number") {
+            const earnedNow = ((now - parsed.startedAt) / 1000) * incomePerSecond(monthlyIncome);
+            return {
+              startedAt: parsed.startedAt,
+              lastTickAt: parsed.lastTickAt,
+              lastSavedAt,
+              monthlyIncome,
+              annualRatePct,
+              capitalBase: DEFAULT_CURRENT_CAPITAL - earnedNow,
+            };
+          }
+
+          return {
+            startedAt: parsed.startedAt,
+            lastTickAt: parsed.lastTickAt,
+            lastSavedAt,
+            monthlyIncome,
+            annualRatePct,
+            capitalBase: parsed.capitalBase,
+          };
+        } catch {
+          return fallback;
+        }
+      }
+
+      let state = getInitialState();
+
+      function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function syncTicks() {
+        const now = Date.now();
+        const elapsedSinceLastTick = now - state.lastTickAt;
+
+        if (elapsedSinceLastTick >= TICK_MS) {
+          const passedTicks = Math.floor(elapsedSinceLastTick / TICK_MS);
+          state.lastTickAt += passedTicks * TICK_MS;
+
+          // Визуально показываем всплывающий +N как в играх
+          const tickAmount = incomePerSecond(state.monthlyIncome);
+          const maxVisualTicks = 5; // чтобы при "залипании вкладки" не создать тысячи элементов
+          const visualTicks = Math.min(passedTicks, maxVisualTicks);
+
+          // Точка старта анимации: прямо над числом "Текущий капитал"
+          const capRect = currentCapitalEl.getBoundingClientRect();
+          const heroRect = heroEl.getBoundingClientRect();
+          // Поднимаем всплывающие деньги выше, чтобы они стартовали ближе к верхней части числа.
+          const anchorTop = capRect.top - heroRect.top - capRect.height * 0.55;
+          // Анкер по правому краю числа (правый край tick будет зафиксирован keyframes).
+          const anchorRight = capRect.right - heroRect.left;
+          const capStyle = window.getComputedStyle(currentCapitalEl);
+          const capFontSize = capStyle.fontSize;
+          const capFontWeight = capStyle.fontWeight;
+          const capLineHeight = capStyle.lineHeight;
+
+          for (let i = 0; i < visualTicks; i++) {
+            const el = document.createElement("span");
+            el.className = "float-tick";
+            el.textContent = `+${formatRub(tickAmount)}`;
+
+            // Фиксированная точка появления: правый край tick над правым краем числа
+            const x = anchorRight;
+            el.style.left = `${Math.max(0, Math.min(heroRect.width, x))}px`;
+            el.style.top = `${Math.max(0, anchorTop)}px`;
+            el.style.fontSize = capFontSize;
+            if (capFontWeight) el.style.fontWeight = capFontWeight;
+            if (capLineHeight) el.style.lineHeight = capLineHeight;
+
+            el.addEventListener("animationend", () => el.remove());
+            floatLayerEl.appendChild(el);
+          }
+
+          const shouldSave = now - state.lastSavedAt >= SAVE_STATE_EVERY_MS;
+          if (shouldSave) {
+            state.lastSavedAt = now;
+            saveState();
+          }
+        }
+      }
+
+      function initGoals() {
+        goalsEl.innerHTML = "";
+        goalsState.length = 0;
+
+        GOALS.forEach((goal, idx) => {
+          const article = document.createElement("article");
+          article.className = "goal";
+          article.dataset.goalIndex = String(idx);
+
+          const top = document.createElement("div");
+          top.className = "goal__top";
+
+          const label = document.createElement("div");
+          label.className = "goal__label";
+          label.textContent = `${goal.label}: ${new Intl.NumberFormat("ru-RU").format(Math.round(goal.target))} ₽`;
+
+          const percent = document.createElement("div");
+          percent.className = "goal__percent";
+          percent.textContent = "0,00000%";
+
+          top.appendChild(label);
+          top.appendChild(percent);
+
+          const bar = document.createElement("div");
+          bar.className = "segmented-bar";
+          bar.dataset.target = String(goal.target);
+          bar.style.setProperty("--segments", String(GOAL_SEGMENTS));
+          bar.setAttribute("aria-label", `Прогресс к цели ${goal.target} рублей`);
+
+          article.appendChild(top);
+          article.appendChild(bar);
+
+          const segmentEls = [];
+          for (let i = 0; i < GOAL_SEGMENTS; i++) {
+            const seg = document.createElement("div");
+            seg.className = "segment";
+            bar.appendChild(seg);
+            segmentEls.push(seg);
+          }
+
+          const eta = document.createElement("div");
+          eta.className = "goal__eta";
+          const etaLeft = document.createElement("div");
+          etaLeft.className = "goal__etaLeft";
+          etaLeft.textContent = "0 секунд";
+
+          const etaRight = document.createElement("div");
+          etaRight.className = "goal__etaRight";
+          etaRight.textContent = "—";
+
+          eta.appendChild(etaLeft);
+          eta.appendChild(etaRight);
+          article.appendChild(eta);
+
+          goalsEl.appendChild(article);
+
+          goalsState.push({
+            target: goal.target,
+            percentEl: percent,
+            barEl: bar,
+            segmentEls,
+            etaLeftEl: etaLeft,
+            etaDateEl: etaRight,
+          });
+        });
+      }
+
+      let lastEtaUpdateAt = 0;
+
+      function renderGoals(currentCapital, nowMs) {
+        const incomePerSec = incomePerSecond(state.monthlyIncome);
+        const shouldUpdateEta = nowMs - lastEtaUpdateAt >= 900;
+
+        for (const goal of goalsState) {
+          const ratio = goal.target > 0 ? currentCapital / goal.target : 0;
+          const clamped = Math.max(0, Math.min(1, ratio));
+
+          goal.percentEl.textContent = formatPercent(ratio * 100);
+          const segmentsFilled = Math.floor(clamped * GOAL_SEGMENTS + 1e-9);
+          goal.segmentEls.forEach((seg, idx) => {
+            seg.classList.toggle("segment--filled", idx < segmentsFilled);
+          });
+
+          if (!shouldUpdateEta) continue;
+
+          const remaining = goal.target - currentCapital;
+          let etaMs = nowMs;
+          // Маржинальный прирост с учетом реинвестирования: проценты начисляются раз в месяц,
+          // но для ETA используем локальное приближение "на секунду".
+          const monthlyRate = state.annualRatePct / 100 / 12;
+          const interestPerSec = currentCapital * monthlyRate / SECONDS_IN_30_DAY_MONTH;
+          const marginalPerSec = incomePerSec + interestPerSec;
+
+          if (remaining > 0 && marginalPerSec > 0) {
+            const secondsToTarget = remaining / marginalPerSec;
+            etaMs = nowMs + secondsToTarget * 1000;
+          }
+
+          const diff = getCalendarDiff(nowMs, etaMs);
+          goal.etaLeftEl.textContent = formatEtaLeft(diff);
+          goal.etaDateEl.textContent = formatDateOnly(etaMs);
+        }
+
+        if (shouldUpdateEta) lastEtaUpdateAt = nowMs;
+      }
+
+      function render() {
+        syncTicks();
+
+        // Привязываем отображение к "границе тика", чтобы рост был именно по секундам
+        const tickNow = state.lastTickAt;
+        const currentCapital = getCurrentCapital(tickNow);
+
+        currentCapitalEl.textContent = formatRub(currentCapital);
+
+        // Считаем заработано с начала текущего дня и текущего месяца.
+        const nowDate = new Date(tickNow);
+        const startOfToday = new Date(nowDate);
+        startOfToday.setHours(0, 0, 0, 0);
+
+        const startOfMonth = new Date(nowDate);
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const effectiveTodayStartMs = Math.max(startOfToday.getTime(), state.startedAt);
+        const effectiveMonthStartMs = Math.max(startOfMonth.getTime(), state.startedAt);
+
+        const capitalAtTodayStart = getCurrentCapital(effectiveTodayStartMs);
+        const capitalAtMonthStart = getCurrentCapital(effectiveMonthStartMs);
+
+        const todayEarned = Math.max(0, currentCapital - capitalAtTodayStart);
+        const monthEarned = Math.max(0, currentCapital - capitalAtMonthStart);
+
+        todayEarnedEl.textContent = formatRub(todayEarned);
+        monthEarnedEl.textContent = formatRub(monthEarned);
+
+        renderGoals(currentCapital, tickNow);
+      }
+
+      function openSettings() {
+        const now = Date.now();
+        monthlyIncomeInput.value = String(Math.max(0, Math.round(state.monthlyIncome)));
+        capitalInput.value = String(Math.max(0, Math.round(getCurrentCapital(now))));
+        startAtInput.value = toDatetimeLocalValue(state.startedAt);
+        startDateInSettingsEl.textContent = `Старт: ${formatDate(state.startedAt)}`;
+        annualRateInput.value = String(Math.max(0, Number.isFinite(state.annualRatePct) ? state.annualRatePct : DEFAULT_ANNUAL_RATE_PCT));
+        capitalDeltaInput.value = "";
+        settingsOverlayEl.classList.add("modal-overlay--open");
+      }
+
+      function closeSettings() {
+        settingsOverlayEl.classList.remove("modal-overlay--open");
+      }
+
+      openSettingsBtn.addEventListener("click", openSettings);
+      closeSettingsBtn.addEventListener("click", closeSettings);
+      cancelSettingsBtn.addEventListener("click", closeSettings);
+
+      // Не закрываем модалку при клике по затемнению (вне окна).
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && settingsOverlayEl.classList.contains("modal-overlay--open")) closeSettings();
+      });
+
+      settingsFormEl.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const now = Date.now();
+
+        const newMonthlyIncome = Number(monthlyIncomeInput.value);
+        const newCapitalNow = Number(capitalInput.value);
+        const newAnnualRatePct = Number(annualRateInput.value);
+        const parsedStartAt = (() => {
+          const v = String(startAtInput.value || "");
+          if (!v) return null;
+          // datetime-local -> "YYYY-MM-DDTHH:mm"
+          const m = v.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+          if (!m) return null;
+          const year = Number(m[1]);
+          const month = Number(m[2]);
+          const day = Number(m[3]);
+          const hour = Number(m[4]);
+          const minute = Number(m[5]);
+          if (![year, month, day, hour, minute].every((n) => Number.isFinite(n))) return null;
+          // month в Date() начинается с 0
+          return new Date(year, month - 1, day, hour, minute, 0).getTime();
+        })();
+
+        const safeMonthlyIncome = Number.isFinite(newMonthlyIncome) && newMonthlyIncome >= 0 ? newMonthlyIncome : DEFAULT_MONTHLY_INCOME;
+        const safeCapitalNow = Number.isFinite(newCapitalNow) && newCapitalNow >= 0 ? newCapitalNow : DEFAULT_CURRENT_CAPITAL;
+        const safeAnnualRatePct = Number.isFinite(newAnnualRatePct) && newAnnualRatePct >= 0 ? newAnnualRatePct : DEFAULT_ANNUAL_RATE_PCT;
+        const safeStartedAt = typeof parsedStartAt === "number" && parsedStartAt > 0 ? parsedStartAt : state.startedAt;
+
+        state.startedAt = safeStartedAt;
+        state.monthlyIncome = safeMonthlyIncome;
+        state.annualRatePct = safeAnnualRatePct;
+
+        // capitalBase так, чтобы прямо сейчас getCurrentCapital(now) стало равным safeCapitalNow
+        // Модель линейна по capitalBase, поэтому можно вытащить базовый "коэффициент".
+        const base0 = computeCapitalFromBase(now, 0);
+        const base1 = computeCapitalFromBase(now, 1);
+        const baseFactor = base1 - base0;
+        state.capitalBase = Math.abs(baseFactor) > 1e-12 ? (safeCapitalNow - base0) / baseFactor : 0;
+        state.lastTickAt = now;
+        state.lastSavedAt = now;
+
+        saveState();
+        render();
+        closeSettings();
+      });
+
+      function toDatetimeLocalValue(timestamp) {
+        const d = new Date(timestamp);
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
+
+      applyCapitalDeltaBtn.addEventListener("click", () => {
+        const now = Date.now();
+        const delta = Number(capitalDeltaInput.value);
+        if (!Number.isFinite(delta) || delta === 0) return;
+
+        const currentCapitalNow = getCurrentCapital(now);
+        const targetCapitalNow = currentCapitalNow + delta;
+        const base0 = computeCapitalFromBase(now, 0);
+        const base1 = computeCapitalFromBase(now, 1);
+        const baseFactor = base1 - base0;
+        state.capitalBase = Math.abs(baseFactor) > 1e-12 ? (targetCapitalNow - base0) / baseFactor : 0;
+
+        state.lastTickAt = now;
+        state.lastSavedAt = now;
+        saveState();
+        render();
+      });
+
+      initGoals();
+      render();
+      setInterval(render, 250);
+    </script>
+  </body>
+</html>
