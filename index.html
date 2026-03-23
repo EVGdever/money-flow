@@ -129,7 +129,7 @@
 
       .float-tick {
         position: absolute;
-        right: -335px;
+        right: -345px;
         font-weight: 800;
         color: var(--accent);
         font-variant-numeric: tabular-nums;
@@ -167,6 +167,17 @@
         color: var(--accent);
         text-shadow: 0 0 22px rgba(125, 255, 116, 0.14);
         font-variant-numeric: tabular-nums;
+      }
+
+      .hero--idle .hero__label,
+      .hero--idle .mini-counter__label {
+        color: #7f89a6;
+      }
+
+      .hero--idle .hero__amount,
+      .hero--idle .mini-counter__value {
+        color: #8f9ab8;
+        text-shadow: none;
       }
 
       .hero__meta {
@@ -555,6 +566,9 @@
 
       const TICK_MS = 1000; // каждую секунду
       const SECONDS_IN_30_DAY_MONTH = 30 * 24 * 60 * 60;
+      const WORK_START_HOUR = 13;
+      const WORK_END_HOUR = 22;
+      const WORK_SECONDS_IN_30_DAY_MONTH = 30 * (WORK_END_HOUR - WORK_START_HOUR) * 60 * 60;
       const MONTH_MS = SECONDS_IN_30_DAY_MONTH * 1000;
       const STORAGE_KEY = "money-flow-widget-state-v2";
       const LEGACY_STORAGE_KEY = "money-flow-widget-state-v1";
@@ -622,7 +636,67 @@
       }
 
       function incomePerSecond(monthlyIncome) {
-        return monthlyIncome / SECONDS_IN_30_DAY_MONTH;
+        return monthlyIncome / WORK_SECONDS_IN_30_DAY_MONTH;
+      }
+
+      function isWorkingTime(timestamp) {
+        const d = new Date(timestamp);
+        const h = d.getHours();
+        const day = d.getDay(); // 0 = воскресенье, 6 = суббота
+        const isWeekday = day >= 1 && day <= 5;
+        return isWeekday && h >= WORK_START_HOUR && h < WORK_END_HOUR;
+      }
+
+      function overlapMs(rangeStart, rangeEnd, windowStart, windowEnd) {
+        const start = Math.max(rangeStart, windowStart);
+        const end = Math.min(rangeEnd, windowEnd);
+        return Math.max(0, end - start);
+      }
+
+      function dayIndexLocal(ts) {
+        const d = new Date(ts);
+        return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+      }
+
+      function workMsBetween(startTs, endTs) {
+        if (endTs <= startTs) return 0;
+
+        const startDay = new Date(startTs);
+        startDay.setHours(0, 0, 0, 0);
+        const endDay = new Date(endTs);
+        endDay.setHours(0, 0, 0, 0);
+
+        const startDayMs = startDay.getTime();
+        const endDayMs = endDay.getTime();
+
+        // Один календарный день.
+        if (startDayMs === endDayMs) {
+          const ws = new Date(startDayMs);
+          ws.setHours(WORK_START_HOUR, 0, 0, 0);
+          const we = new Date(startDayMs);
+          we.setHours(WORK_END_HOUR, 0, 0, 0);
+          return overlapMs(startTs, endTs, ws.getTime(), we.getTime());
+        }
+
+        // Первый неполный день.
+        const firstWs = new Date(startDayMs);
+        firstWs.setHours(WORK_START_HOUR, 0, 0, 0);
+        const firstWe = new Date(startDayMs);
+        firstWe.setHours(WORK_END_HOUR, 0, 0, 0);
+        const firstPart = overlapMs(startTs, startDayMs + 86400000, firstWs.getTime(), firstWe.getTime());
+
+        // Последний неполный день.
+        const lastWs = new Date(endDayMs);
+        lastWs.setHours(WORK_START_HOUR, 0, 0, 0);
+        const lastWe = new Date(endDayMs);
+        lastWe.setHours(WORK_END_HOUR, 0, 0, 0);
+        const lastPart = overlapMs(endDayMs, endTs, lastWs.getTime(), lastWe.getTime());
+
+        // Полные дни между ними.
+        const middleDays = Math.max(0, dayIndexLocal(endTs) - dayIndexLocal(startTs) - 1);
+        const fullWorkDayMs = (WORK_END_HOUR - WORK_START_HOUR) * 60 * 60 * 1000;
+
+        return firstPart + lastPart + middleDays * fullWorkDayMs;
       }
 
       function interestMonthlyMultiplier(annualRatePct) {
@@ -652,8 +726,10 @@
           capitalAtMonthEnd = Mp * capitalBaseOverride + (M * I * (Mp - 1)) / (M - 1);
         }
 
-        // Неполный месяц: только линейный доход по секундам (процент начисляем только в полные месяцы)
-        const partialIncome = earnedPerSecond * (remainingMs / 1000);
+        // Неполный месяц: доход только в рабочие часы, процент начисляем только в полные месяцы.
+        const partialStart = state.startedAt + fullMonths * MONTH_MS;
+        const workMs = workMsBetween(partialStart, now);
+        const partialIncome = earnedPerSecond * (workMs / 1000);
         return capitalAtMonthEnd + partialIncome;
       }
 
@@ -824,7 +900,9 @@
           const capFontWeight = capStyle.fontWeight;
           const capLineHeight = capStyle.lineHeight;
 
+          const workingNow = isWorkingTime(now);
           for (let i = 0; i < visualTicks; i++) {
+            if (!workingNow) break;
             const el = document.createElement("span");
             el.className = "float-tick";
             el.textContent = `+${formatRub(tickAmount)}`;
@@ -961,8 +1039,10 @@
         // Привязываем отображение к "границе тика", чтобы рост был именно по секундам
         const tickNow = state.lastTickAt;
         const currentCapital = getCurrentCapital(tickNow);
+        const workingNow = isWorkingTime(tickNow);
 
         currentCapitalEl.textContent = formatRub(currentCapital);
+        heroEl.classList.toggle("hero--idle", !workingNow);
 
         // Считаем заработано с начала текущего дня и текущего месяца.
         const nowDate = new Date(tickNow);
