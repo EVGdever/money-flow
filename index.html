@@ -567,8 +567,13 @@
       const TICK_MS = 1000; // каждую секунду
       const SECONDS_IN_30_DAY_MONTH = 30 * 24 * 60 * 60;
       const WORK_START_HOUR = 13;
-      const WORK_END_HOUR = 22;
-      const WORK_SECONDS_IN_30_DAY_MONTH = 30 * (WORK_END_HOUR - WORK_START_HOUR) * 60 * 60;
+      // Чтобы формулы совпадали с твоим примером "20 рабочих дней по 8 часов":
+      // 20 * 8 = 160 часов продуктивного времени в "месяце".
+      const WORK_HOURS_PER_DAY = 8;
+      const WORK_END_HOUR = WORK_START_HOUR + WORK_HOURS_PER_DAY; // 13:00–21:00
+
+      const WORK_DAYS_PER_MONTH = 20;
+      const WORK_SECONDS_IN_30_DAY_MONTH = WORK_DAYS_PER_MONTH * WORK_HOURS_PER_DAY * 60 * 60; // 160h
       const MONTH_MS = SECONDS_IN_30_DAY_MONTH * 1000;
       const STORAGE_KEY = "money-flow-widget-state-v2";
       const LEGACY_STORAGE_KEY = "money-flow-widget-state-v1";
@@ -661,42 +666,32 @@
       function workMsBetween(startTs, endTs) {
         if (endTs <= startTs) return 0;
 
-        const startDay = new Date(startTs);
-        startDay.setHours(0, 0, 0, 0);
-        const endDay = new Date(endTs);
-        endDay.setHours(0, 0, 0, 0);
+        let total = 0;
+        const cursor = new Date(startTs);
+        cursor.setHours(0, 0, 0, 0);
 
-        const startDayMs = startDay.getTime();
-        const endDayMs = endDay.getTime();
+        while (cursor.getTime() < endTs) {
+          const dayStartMs = cursor.getTime();
+          const dayEndMs = dayStartMs + 86400000;
 
-        // Один календарный день.
-        if (startDayMs === endDayMs) {
-          const ws = new Date(startDayMs);
-          ws.setHours(WORK_START_HOUR, 0, 0, 0);
-          const we = new Date(startDayMs);
-          we.setHours(WORK_END_HOUR, 0, 0, 0);
-          return overlapMs(startTs, endTs, ws.getTime(), we.getTime());
+          const day = cursor.getDay(); // 0=вс, 6=сб
+          const isWeekday = day >= 1 && day <= 5;
+
+          if (isWeekday) {
+            const ws = new Date(dayStartMs);
+            ws.setHours(WORK_START_HOUR, 0, 0, 0);
+            const we = new Date(dayStartMs);
+            we.setHours(WORK_END_HOUR, 0, 0, 0);
+
+            const ovStart = Math.max(startTs, ws.getTime());
+            const ovEnd = Math.min(endTs, we.getTime());
+            total += Math.max(0, ovEnd - ovStart);
+          }
+
+          cursor.setTime(dayEndMs);
         }
 
-        // Первый неполный день.
-        const firstWs = new Date(startDayMs);
-        firstWs.setHours(WORK_START_HOUR, 0, 0, 0);
-        const firstWe = new Date(startDayMs);
-        firstWe.setHours(WORK_END_HOUR, 0, 0, 0);
-        const firstPart = overlapMs(startTs, startDayMs + 86400000, firstWs.getTime(), firstWe.getTime());
-
-        // Последний неполный день.
-        const lastWs = new Date(endDayMs);
-        lastWs.setHours(WORK_START_HOUR, 0, 0, 0);
-        const lastWe = new Date(endDayMs);
-        lastWe.setHours(WORK_END_HOUR, 0, 0, 0);
-        const lastPart = overlapMs(endDayMs, endTs, lastWs.getTime(), lastWe.getTime());
-
-        // Полные дни между ними.
-        const middleDays = Math.max(0, dayIndexLocal(endTs) - dayIndexLocal(startTs) - 1);
-        const fullWorkDayMs = (WORK_END_HOUR - WORK_START_HOUR) * 60 * 60 * 1000;
-
-        return firstPart + lastPart + middleDays * fullWorkDayMs;
+        return total;
       }
 
       function interestMonthlyMultiplier(annualRatePct) {
